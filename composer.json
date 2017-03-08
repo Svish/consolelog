@@ -1,0 +1,14 @@
+{
+    "name": "geekality/consolelog",
+    "description": "Log variables to browser console via Chrome Logger protocol.",
+    "keywords": ["log","logging"],
+    "homepage": "https://github.com/Svish/chromephp",
+    "require":
+    {
+        "php": ">=7"
+    },
+    "autoload":
+    {
+        "psr-0": {"Geekality\\": "src/"}
+    }
+}
