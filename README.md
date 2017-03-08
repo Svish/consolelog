@@ -13,7 +13,6 @@ Usage
 ===
 
 ```php
-
 use Geekality\ConsoleLog;
 
 ConsoleLog::info('Hello console!');
