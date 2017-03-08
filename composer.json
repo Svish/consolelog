@@ -10,6 +10,6 @@
     },
     "autoload":
     {
-        "psr-0": {"Geekality\\": "src/"}
+        "psr-4": {"Geekality\\": "src/"}
     }
 }
