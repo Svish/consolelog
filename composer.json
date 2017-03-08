@@ -1,7 +1,7 @@
 {
     "name": "geekality/consolelog",
     "description": "Log variables to browser console via Chrome Logger protocol.",
-    "keywords": ["log","logging"],
+    "keywords": ["log", "logging", "debugging", "browser", "console", "chrome logger"],
     "homepage": "https://github.com/Svish/chromephp",
     "license": "MIT",
     "require":
