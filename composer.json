@@ -3,6 +3,7 @@
     "description": "Log variables to browser console via Chrome Logger protocol.",
     "keywords": ["log","logging"],
     "homepage": "https://github.com/Svish/chromephp",
+    "license": "MIT",
     "require":
     {
         "php": ">=7"
