@@ -12,7 +12,7 @@ use Reflection, ReflectionClass, ReflectionProperty;
  */
 class ConsoleLog
 {
-	const VERSION = '1.0.0';
+	const VERSION = '1.0';
 	const HEADER_NAME = 'X-ChromeLogger-Data';
 	const ALLOWED_TYPES = [
 		'log',
