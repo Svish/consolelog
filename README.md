@@ -1,19 +1,16 @@
-# Overview
+Overview
+===
+
+![Latest version](https://poser.pugx.org/geekality/consolelog/version?format=flat-square)
+![Downloads](https://poser.pugx.org/geekality/consolelog/downloads?format=flat-square)
+![License](https://poser.pugx.org/geekality/consolelog/license?format=flat-square)
+
 
 Allows easy server-side logging to browsers supporting the [Chrome Logger](http://www.chromelogger.com) protocol. Either native or via plugins.
 
 
-### Source
-
-Based on [ccampbell/chromephp](http://github.com/ccampbell/chromephp), but more or less a complete rewrite because I found that one hard to extend and adjust in my own project. 😟
-
-Ended up using newer PHP features and simplifying it a bit too, because that's how I roll.
-
-Also called it `ConsoleLog` because I find it weird to use `Chrome` and `Php` in my code, when already writing PHP and I'm viewing the messages in the native Developer Console in FireFox... 🤔 🙂
-
-
-
-# Usage
+Usage
+===
 
 ```php
 
@@ -29,3 +26,18 @@ ConsoleLog::log('Bar');
 ConsoleLog::groupEnd();
 
 ```
+
+
+-------
+
+
+Source
+---
+
+Based on [ccampbell/chromephp](http://github.com/ccampbell/chromephp), but more or less a complete rewrite because I found that one hard to extend and adjust in my own project. 😟
+
+Ended up using newer PHP features and simplifying it a bit too, because that's how I roll.
+
+Also called it `ConsoleLog` because I find it weird to use `Chrome` and `Php` in my code, when already writing PHP and I'm viewing the messages in the native Developer Console in FireFox... 🤔 🙂
+
+
