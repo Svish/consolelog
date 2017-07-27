@@ -20,12 +20,18 @@ ConsoleLog::log($_SERVER);
 ConsoleLog::warn('something is off with', $object);
 ConsoleLog::error('fail');
 
+ConsoleLog::table([
+	['R1 C1', 'R1 C2'],
+	['R2 C1', 'R2 C2'],
+	]);
+
 ConsoleLog::group('Group header');
 ConsoleLog::log('Bar');
 ConsoleLog::groupEnd();
 
 ```
 
+See more examples in [sample/index.php](sample/index.php).
 
 -------
 
