@@ -39,7 +39,7 @@ class ConsoleLog
 		'rows' => [],
 	];
 
-	private static $_callers = [];
+	private static $_backtraces = [];
 	private $_processed = [];
 	private $_bt;
 
@@ -95,15 +95,19 @@ class ConsoleLog
 		$this->_processed = [];
 		$data = $this->_convert($data);
 
-		// Find caller file and line
+		// Find backtrace file and line
 		$backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
 		$backtrace = $backtrace[$this->_bt] ?? null;
-		$caller = $backtrace
+		$backtrace = $backtrace
 			? "{$backtrace['file']} : {$backtrace['line']}"
 			: 'unknown';
 
 		// Add new log row
-		self::_addRow($data, $caller, $type);
+		$row = self::_row($data, $backtrace, $type);
+		self::$_log['rows'][] = $row;
+
+		// Write the header
+		$this->_writeHeader();
 		return $this;
 	}
 
@@ -148,36 +152,77 @@ class ConsoleLog
 
 
 
-	protected function _addRow(array $data, string $caller, string $type)
+	protected function _row(array $data, string $backtrace, string $type)
 	{
-		// No caller for these
+		// No backtrace for these
 		if(in_array($type, static::NO_BACKTRACE))
-			$caller = null;
+			$backtrace = null;
 
 		// And none for repeaters
-		if(end(self::$_callers) == $caller)
-			$caller = null;
+		if(end(self::$_backtraces) == $backtrace)
+			$backtrace = null;
 		else
-			self::$_callers[] = $caller;
+			self::$_backtraces[] = $backtrace;
 		
-		// Add to log array and write header
-		self::$_log['rows'][] = [$data, $caller, $type];
-		self::_writeHeader();
-	}
-
-
-
-	protected function _writeHeader()
-	{
-		$log = json_encode(self::$_log);
-		$log = base64_encode($log);
-		header(self::HEADER_NAME.': '.$log, true);
+		return [$data, $backtrace, $type];
 	}
 
 
 
 	/**
-	 * Helper: Substitute to use for duplicates in log data.
+	 * @return string The data JSON and base64 encoded.
+	 */
+	protected function _writeHeader()
+	{
+		header($this->_getHeader(self::$_log));
+	}
+
+
+
+	/**
+	 * @param 
+	 * @return string The header to send.
+	 */
+	protected function _getHeader(array $data): string
+	{
+		$data = $this->_encode($data);
+		return self::HEADER_NAME.': '.$data;
+	}
+
+
+
+	/**
+	 * @return string The data JSON and base64 encoded.
+	 */
+	protected function _encode(array $data): string
+	{
+        array_walk_recursive($data, [$this, '_filterData']);
+		$data = json_encode($data);
+		return base64_encode($data);
+	}
+
+
+
+	/**
+	 * @return string The data JSON and base64 encoded.
+	 */
+	protected function _filterData(&$data)
+	{
+		// Resources
+		if(is_resource($data))
+			$data = sprintf('%s (%s)', $data, get_resource_type($data));
+		// Non-finite numbers
+		elseif(is_numeric($data) && !is_finite($data))
+			$data = sprintf('%s (%s)', $data, 'numeric');
+		// Other unknown stuff
+        elseif(!is_object($data) && !is_null($data) && !is_scalar($data))
+            $data = print_r($data, true);
+	}
+
+
+
+	/**
+	 * @return string Substitute for recurring objects.
 	 */
 	protected function _objRef($obj, int $n): string
 	{

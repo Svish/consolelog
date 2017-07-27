@@ -20,6 +20,7 @@ ConsoleLog::log('As long as Unicode, even emoji 👍🎉');
 /**
  * Grouping and available log levels.
  */
+ConsoleLog::log(' ');
 ConsoleLog::group('Log levels');
 ConsoleLog::log('ConsoleLog::log( stuff )');
 ConsoleLog::info('ConsoleLog::info( stuff )');
@@ -31,6 +32,7 @@ ConsoleLog::groupEnd();
 /**
  * Arrays and objects can be passed too.
  */
+ConsoleLog::log(' ');
 ConsoleLog::group('Arrays and objects');
 ConsoleLog::log('Simple array:', [1,2,3]);
 ConsoleLog::log('Array with keys:', ['a' => 1, 'b' => 2, 'c' => 3]);
@@ -42,6 +44,7 @@ ConsoleLog::groupEnd();
 /**
  * Using ConsoleLog as part of a custom logger.
  */
+ConsoleLog::log(' ');
 ConsoleLog::group('ConsoleLog inside');
 $myLog = new class
 {
@@ -66,8 +69,20 @@ ConsoleLog::groupEnd();
 
 
 /**
+ * Weird stuff.
+ */
+ConsoleLog::log(' ');
+ConsoleLog::group('Strange stuff');
+ConsoleLog::log('Resource: ', fopen(__FILE__, 'r'));
+ConsoleLog::log('Too large number: ', log(0));
+ConsoleLog::log('Not a number: ', acos(2));
+ConsoleLog::groupEnd();
+
+
+/**
  * Various tables.
  */
+ConsoleLog::log(' ');
 ConsoleLog::group('Tables');
 ConsoleLog::log('Plain, simple table:');
 ConsoleLog::table([
@@ -103,6 +118,7 @@ ConsoleLog::groupEnd();
 /**
  * Object recursion cycles and duplicates in log messages.
  */
+ConsoleLog::log(' ');
 ConsoleLog::group('Object de-duplication and recursion prevention');
 $x = new TestClass;
 $y = new TestClass;
