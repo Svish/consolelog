@@ -1,0 +1,19 @@
+{
+	"folders":
+	[
+		{
+			"file_exclude_patterns":
+			[
+				"composer.lock",
+				"*.sublime-*"
+			],
+			"folder_exclude_patterns":
+			[
+				".git",
+				"docs",
+				"vendor"
+			],
+			"path": "."
+		}
+	]
+}
