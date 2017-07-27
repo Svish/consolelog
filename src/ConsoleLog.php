@@ -33,30 +33,48 @@ class ConsoleLog
 		'groupCollapsed',
 		];
 
+	protected static $rows = [];
+
 	private static $_log = [
 		'version' => self::VERSION,
 		'columns' => ['log', 'backtrace', 'type'],
-		'rows' => [],
+		'rows' => null,
 	];
 
+	private static $_instance;
 	private static $_backtraces = [];
 	private $_processed = [];
 	private $_bt;
 
-
-
+	/**
+	 * Constructor.
+	 * 
+	 * @param int $bt Backtrace level to get caller id.
+	 */
 	public function __construct(int $bt = 1)
 	{
 		$this->_bt = $bt;
+		if(is_null(self::$_log['rows']))
+			self::$_log['rows'] = &self::$rows;
 	}
 
 
 
-	private static $_instance;
-	private static final function instance()
+	/**
+	 * The instance used by the static logging methods.
+	 * 
+	 * @param self $instance If provided, and called before any static logging calls have been made, the given $instance will be used by the static logging methods instead of creating a default one.
+	 * 
+	 * @see self::__callStatic
+	 */
+	public static final function instance(self $instance = null)
 	{
 		if( ! self::$_instance)
-			self::$_instance = new static(2);
+		{
+			self::$_instance = ! is_null($instance)
+				? $instance
+				: new static(2);
+		}
 		return self::$_instance;
 	}
 
@@ -89,7 +107,7 @@ class ConsoleLog
 
 
 
-	protected function _log($type, array $data)
+	protected function _log($type, array $data): self
 	{
 		// Convert $data to something safer to send
 		$this->_processed = [];
@@ -99,18 +117,18 @@ class ConsoleLog
 		$backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
 		$backtrace = $backtrace[$this->_bt] ?? null;
 		$backtrace = $backtrace
-			? "{$backtrace['file']} : {$backtrace['line']}"
+			? $this->_backtrace($backtrace['file'], $backtrace['line'])
 			: 'unknown';
 
 		// Add new log row
 		$row = self::_row($data, $backtrace, $type);
-		self::$_log['rows'][] = $row;
+		if( ! is_null($row))
+			self::$rows[] = $row;
 
 		// Write the header
 		$this->_writeHeader();
 		return $this;
 	}
-
 
 
 	protected function _convert($object)
@@ -170,22 +188,21 @@ class ConsoleLog
 
 
 	/**
-	 * @return string The data JSON and base64 encoded.
+	 * Write the console log header.
 	 */
 	protected function _writeHeader()
 	{
-		header($this->_getHeader(self::$_log));
+		header($this->_getHeader());
 	}
 
 
 
 	/**
-	 * @param 
-	 * @return string The header to send.
+	 * @return string The complete header with name and encoded log data.
 	 */
-	protected function _getHeader(array $data): string
+	protected function _getHeader(): string
 	{
-		$data = $this->_encode($data);
+		$data = $this->_encode(self::$_log);
 		return self::HEADER_NAME.': '.$data;
 	}
 
@@ -196,7 +213,7 @@ class ConsoleLog
 	 */
 	protected function _encode(array $data): string
 	{
-        array_walk_recursive($data, [$this, '_filterData']);
+		array_walk_recursive($data, [$this, '_filterData']);
 		$data = json_encode($data);
 		return base64_encode($data);
 	}
@@ -204,7 +221,8 @@ class ConsoleLog
 
 
 	/**
-	 * @return string The data JSON and base64 encoded.
+	 * Overwrites $data with something safe, if something json_encode chokes on.
+	 * @return void
 	 */
 	protected function _filterData(&$data)
 	{
@@ -214,9 +232,9 @@ class ConsoleLog
 		// Non-finite numbers
 		elseif(is_numeric($data) && !is_finite($data))
 			$data = sprintf('%s (%s)', $data, 'numeric');
-		// Other unknown stuff
-        elseif(!is_object($data) && !is_null($data) && !is_scalar($data))
-            $data = print_r($data, true);
+		// Other weird stuff, e.g. NaN
+		elseif(!is_object($data) && !is_null($data) && !is_scalar($data))
+			$data = print_r($data, true);
 	}
 
 
@@ -230,11 +248,17 @@ class ConsoleLog
 	}
 
 
-
 	/**
-	 * Helper: Yield [prop] => [value] of $object.
+	 * @return string $file : $line
 	 */
-	private final static function _getProperties($object): \Generator
+	protected static final function _backtrace(string $file, int $line): string
+	{
+		return "$file : $line";
+	}
+
+
+
+	private static function _getProperties($object): \Generator
 	{
 		$class = new ReflectionClass($object);
 		foreach($class->getProperties() as $p)
@@ -246,10 +270,7 @@ class ConsoleLog
 
 
 
-	/**
-	 * Helper: Get property name with modifiers prepended.
-	 */
-	private final static function _getPropertyKey(ReflectionProperty $p): string
+	private static function _getPropertyKey(ReflectionProperty $p): string
 	{
 		$m = Reflection::getModifierNames($p->getModifiers());
 		$m[] = $p->getName();
