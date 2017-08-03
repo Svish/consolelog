@@ -5,9 +5,15 @@ use Exception;
 use Reflection, ReflectionClass, ReflectionProperty;
 
 
+header_register_callback([ConsoleLog::class, '_writeHeader']);
+
 
 /**
  * Class for logging via Chrome Logger protocol.
+ * 
+ * TODO: Unit tests
+ *   - https://phpunit.de/getting-started.html
+ * 
  * 
  * @see https://github.com/svish/consolelog
  * @see https://craig.is/writing/chrome-logger
@@ -82,7 +88,7 @@ class ConsoleLog
 
 	public static final function __callStatic($type, $data)
 	{
-		self::instance()->$type(...$data);
+		return self::instance()->$type(...$data);
 	}
 
 
@@ -126,20 +132,20 @@ class ConsoleLog
 			self::$rows[] = $row;
 
 		// Write the header
-		$this->_writeHeader();
+		//$this->_writeHeader(); 
 		return $this;
 	}
 
 
 	protected function _convert($object)
 	{
-		// "Recurse" if array
+		// Return mapped "recursed" array
 		if(is_array($object))
 			return array_map([$this, '_convert'], $object);
 
-		// Return as is if not object
+		// Return if not object
 		if( ! is_object($object))
-			return $object;
+			return $this->_filterData($object);
 
 		// Remember object if new
 		if(is_object($object))
@@ -170,7 +176,7 @@ class ConsoleLog
 
 
 
-	protected function _row(array $data, string $backtrace, string $type)
+	protected function _row(array $data, string $backtrace, string $type): array
 	{
 		// No backtrace for these
 		if(in_array($type, static::NO_BACKTRACE))
@@ -190,9 +196,10 @@ class ConsoleLog
 	/**
 	 * Write the console log header.
 	 */
-	protected function _writeHeader()
+	public static function _writeHeader(): void
 	{
-		header($this->_getHeader());
+		if( ! headers_sent())
+			header(static::_getHeader());
 	}
 
 
@@ -200,10 +207,10 @@ class ConsoleLog
 	/**
 	 * @return string The complete header with name and encoded log data.
 	 */
-	protected function _getHeader(): string
+	protected static function _getHeader(): string
 	{
-		$data = $this->_encode(self::$_log);
-		return self::HEADER_NAME.': '.$data;
+		$data = static::_encode(static::$_log);
+		return static::HEADER_NAME.': '.$data;
 	}
 
 
@@ -211,9 +218,9 @@ class ConsoleLog
 	/**
 	 * @return string The data JSON and base64 encoded.
 	 */
-	protected function _encode(array $data): string
+	protected static function _encode(array $data): string
 	{
-		array_walk_recursive($data, [$this, '_filterData']);
+		array_walk_recursive($data, [static::class, '_filterData']);
 		$data = json_encode($data);
 		return base64_encode($data);
 	}
@@ -224,17 +231,25 @@ class ConsoleLog
 	 * Overwrites $data with something safe, if something json_encode chokes on.
 	 * @return void
 	 */
-	protected function _filterData(&$data)
+	protected static function _filterData(&$data)
 	{
+		// Null
+		if(is_null($data))
+			return 'null';
+
 		// Resources
-		if(is_resource($data))
+		elseif(is_resource($data))
 			$data = sprintf('%s (%s)', $data, get_resource_type($data));
+		
 		// Non-finite numbers
 		elseif(is_numeric($data) && !is_finite($data))
 			$data = sprintf('%s (%s)', $data, 'numeric');
+		
 		// Other weird stuff, e.g. NaN
 		elseif(!is_object($data) && !is_null($data) && !is_scalar($data))
 			$data = print_r($data, true);
+
+		return $data;
 	}
 
 
@@ -258,7 +273,7 @@ class ConsoleLog
 
 
 
-	private static function _getProperties($object): \Generator
+	private static function _getProperties($object): iterable
 	{
 		$class = new ReflectionClass($object);
 		foreach($class->getProperties() as $p)
